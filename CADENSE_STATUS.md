@@ -1,7 +1,7 @@
 # CADense — CMS Sheet Metal, DSF/DDS & Technical Data Sheet Automation Status
 
 ## 1. Upstream Base & Architecture Compliance
-- **Upstream Base**: `tangency-labs/solidcraft` `v0.23.1+` (Design Format `38`)
+- **Upstream Base**: `tangency-labs/solidcraft` `v0.24.0` (Design Format `39`)
 - **Rule R1 Status**: **STRICT ZERO-TOUCH UPSTREAM COMPLIANCE**
   - Upstream crates (`crates/doc`, `crates/engine`, `crates/ui-egui`, `apps/solidcraft`) and root `Cargo.toml` remain completely pure and unmodified.
   - Zero merge conflicts when syncing with new SolidCraft releases via `./scripts/sync-upstream.ps1`.
@@ -22,3 +22,4 @@
 | **Task 02** | `crates/cadense-dsf`, `crates/cadense-order`, `crates/cadense-ui`, `apps/cadense-studio` | Trapezoidal Multi-Port Scaler (independent `W1..W4` & `H1..H4`), Customer Order CSV batch parser, 65-variation taxonomy matcher, Bonn Metal clearance/slot/cover rule resolver, Concept 23 Brand Identity, interactive Order Queue Panel, and `apps/cadense-studio` standalone wrapper app | ✅ Completed | 2026-10-27 |
 | **Task 03** | `crates/cadense-dds-pdf` | `.dds` ("Danish Data Sheet") project collection container, 3D B-rep Hidden-Line Removal (HLR) isometric vector projection, red vector dimension callouts, top-left `SECTIONAL VIEW` insets, and Bonn Metal title block PDF generator | ✅ Completed | 2026-10-27 |
 | **Task 04** | `apps/cadense-studio`, `crates/cadense-ui`, `assets/dxf/`, `drawings/` | Landing Screen Overhaul (Concept 23 dark slate aesthetic, single emblem), SolidCraft CAD 1-click launcher, 4-Stage End-to-End Industrial Sheet Metal Pipeline, DXF Pre-Flight Repair Tool (gap healing < 0.15mm, layer normalization), in-progress drawings manager, and Coupler Flaps ON/OFF & slot constraints Rigging Studio | ✅ Completed | 2026-10-27 |
+| **Task 05** | Entire Workspace, `scripts/sync-upstream.ps1` | Upstream SolidCraft v0.24.0 (Design Format 39) Upgrade & Rule R1 Sync: 132 commits incorporated, flat cut pattern preservation, unit expression arithmetic fixes, Weldments ribbon for Unistrut channels, off-thread rebuild engine, and zero-touch wrapper preservation | ✅ Completed | 2026-10-27 |
