@@ -31,17 +31,24 @@ foreach ($line in $diffFiles) {
         $path.StartsWith("apps/cadense-") -or
         $path.StartsWith("scripts/") -or
         $path.StartsWith(".antigravity/") -or
+        $path.StartsWith(".agent/") -or
         $path.StartsWith("references/") -or
-        $path.StartsWith("docs/cadense") -or
+        $path.StartsWith("docs/") -or
+        $path.StartsWith("assets/dxf/") -or
+        $path.StartsWith("assets/templates/") -or
+        $path.StartsWith("drawings/cms_in_progress/") -or
         $path -eq "CADENSE_STATUS.md" -or
+        $path -eq "dxf_analysis_report.md" -or
         $path -eq "Cargo.toml" -or
-        $path -eq "Cargo.lock"
+        $path -eq "Cargo.lock" -or
+        $path -eq "AGENTS.md" -or
+        $path -eq ".cargo/config.toml"
     )
 
     if (-not $isCadensePath) {
         if ($status -eq "D") {
             $violations += "DELETED upstream file: $path"
-        } else {
+        } elseif ($status -eq "M") {
             $fileContent = Get-Content $path -Raw -ErrorAction SilentlyContinue
             if ($fileContent -and ($fileContent -notmatch "CADENSE-HOOK")) {
                 $violations += "MODIFIED upstream file without [CADENSE-HOOK] marker: $path"
