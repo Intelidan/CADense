@@ -1,0 +1,14 @@
+[package]
+name = "cadense-ui"
+version = "0.2.0"
+edition = "2021"
+description = "CADense Phase 2 UI extension: Port Assignment Inspector and Simultaneous 2D Unfolded Flat Pattern Preview Window"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+cadense-dsf = { path = "../cadense-dsf" }
+cadense-order = { path = "../cadense-order" }
+egui.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+uuid = { version = "1.0", features = ["v4"] }

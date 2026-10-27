@@ -1,0 +1,189 @@
+{
+  "format": "solidcraft/1",
+  "name": "TRK-RISER-IN-45-100x100",
+  "units": "mm",
+  "params": [
+    {
+      "name": "W",
+      "expr": "100"
+    },
+    {
+      "name": "H",
+      "expr": "100"
+    },
+    {
+      "name": "T",
+      "expr": "1.2"
+    },
+    {
+      "name": "RiserAngle",
+      "expr": "45"
+    }
+  ],
+  "features": [
+    {
+      "id": 1,
+      "name": "FlatContourWithNotches",
+      "suppressed": false,
+      "type": "sketch",
+      "plane": {
+        "type": "origin",
+        "name": "XY"
+      },
+      "sketch": {
+        "points": [
+          {
+            "id": "origin",
+            "pos": [
+              0.0,
+              0.0
+            ],
+            "fixed": true
+          },
+          {
+            "id": "p1",
+            "pos": [
+              0.0,
+              0.0
+            ],
+            "fixed": false
+          },
+          {
+            "id": "p2",
+            "pos": [
+              100.0,
+              0.0
+            ],
+            "fixed": false
+          },
+          {
+            "id": "p3",
+            "pos": [
+              100.0,
+              100.0
+            ],
+            "fixed": false
+          },
+          {
+            "id": "p4",
+            "pos": [
+              100.0,
+              200.0
+            ],
+            "fixed": false
+          },
+          {
+            "id": "p5",
+            "pos": [
+              0.0,
+              200.0
+            ],
+            "fixed": false
+          },
+          {
+            "id": "p6",
+            "pos": [
+              0.0,
+              100.0
+            ],
+            "fixed": false
+          }
+        ],
+        "curves": [
+          {
+            "id": "c1",
+            "type": "line",
+            "a": 1,
+            "b": 2,
+            "construction": false
+          },
+          {
+            "id": "c2",
+            "type": "line",
+            "a": 2,
+            "b": 3,
+            "construction": false
+          },
+          {
+            "id": "c3",
+            "type": "line",
+            "a": 3,
+            "b": 4,
+            "construction": false
+          },
+          {
+            "id": "c4",
+            "type": "line",
+            "a": 4,
+            "b": 5,
+            "construction": false
+          },
+          {
+            "id": "c5",
+            "type": "line",
+            "a": 5,
+            "b": 6,
+            "construction": false
+          },
+          {
+            "id": "c6",
+            "type": "line",
+            "a": 6,
+            "b": 1,
+            "construction": false
+          }
+        ],
+        "constraints": []
+      }
+    },
+    {
+      "id": 2,
+      "name": "SheetBase",
+      "suppressed": false,
+      "type": "sheet_base",
+      "sketch": 1,
+      "profiles": {
+        "type": "all"
+      },
+      "thickness": "T"
+    },
+    {
+      "id": 3,
+      "name": "SideWallLeft",
+      "suppressed": false,
+      "type": "sheet_flange",
+      "height": "H",
+      "angle": "90",
+      "radius": "1.5"
+    },
+    {
+      "id": 4,
+      "name": "SideWallRight",
+      "suppressed": false,
+      "type": "sheet_flange",
+      "height": "H",
+      "angle": "90",
+      "radius": "1.5"
+    },
+    {
+      "id": 5,
+      "name": "InsideRiserFold45",
+      "suppressed": false,
+      "type": "sheet_fold",
+      "a": [
+        0.0,
+        100.0,
+        0.0
+      ],
+      "b": [
+        100.0,
+        100.0,
+        0.0
+      ],
+      "angle": "RiserAngle",
+      "radius": "1.5",
+      "position": "centerline"
+    }
+  ],
+  "next_id": 6
+}

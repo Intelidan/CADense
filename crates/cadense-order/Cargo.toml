@@ -1,0 +1,17 @@
+[package]
+name = "cadense-order"
+version = "0.2.0"
+edition = "2021"
+description = "CADense Phase 3 Customer Order CSV batch processor, Bonn Metal clearance/slot resolver, and interactive Order Queue engine for SolidCraft v0.23.1+ (Format 38)"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+cadense-dsf = { path = "../cadense-dsf" }
+csv = "1.3"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+thiserror = "1.0"
+uuid = { version = "1.10", features = ["v4", "serde"] }
+
+[dev-dependencies]
+tempfile = "3.12"

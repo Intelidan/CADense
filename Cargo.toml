@@ -1,6 +1,13 @@
 [workspace]
 resolver = "3"
-members = ["crates/*", "apps/*", "xtask"]
+members = [
+    "crates/*",
+    "apps/*",
+    "xtask",
+    # === [CADENSE-HOOK START: Phase 4 Danish Data Sheet PDF crate] ===
+    "crates/cadense-dds-pdf",
+    # === [CADENSE-HOOK END] ===
+]
 # Third-party code kept with local fixes (see vendor/README.md); not linted as ours.
 exclude = ["vendor"]
 
@@ -14,6 +21,11 @@ repository = "https://github.com/bherbruck/solidcraft"
 
 [workspace.dependencies]
 robust = "1.2"
+egui = "0.36"
+eframe = { version = "0.36", default-features = false, features = ["persistence"] }
+serde = { version = "1.0", features = ["derive", "rc"] }
+serde_json = { version = "1.0", features = ["float_roundtrip"] }
+
 # internal
 solidcraft-geom = { path = "crates/geom" }
 solidcraft-sketch = { path = "crates/sketch" }
@@ -31,12 +43,10 @@ solidcraft-3dx-client = { path = "crates/threedx-client" }
 
 # foundation
 thiserror = "2"
-serde = { version = "1", features = ["derive", "rc"] }
 # derive macros (crates/derive); already in the tree through serde_derive
 proc-macro2 = "1"
 quote = "1"
 syn = { version = "2", features = ["full"] }
-serde_json = { version = "1", features = ["float_roundtrip"] }
 # command parameter and result schemas
 schemars = "1.2"
 serde_path_to_error = "0.1"
@@ -96,9 +106,6 @@ tiny-skia = { version = "0.12", default-features = false, features = ["std", "si
 toml = "1"
 
 # ui
-egui = "0.36"
-eframe = { version = "0.36", default-features = false, features = ["persistence"] }
-# Instant/SystemTime that also work in the browser (std panics on wasm32-unknown-unknown).
 web-time = "1"
 egui-wgpu = "0.36"
 # the wgpu egui-wgpu uses, for compute (crates/gpu); backends come from the apps' features

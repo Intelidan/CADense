@@ -1,0 +1,179 @@
+{
+  "format": "solidcraft/1",
+  "name": "CT-B45-100x50",
+  "units": "mm",
+  "params": [
+    {
+      "name": "W",
+      "expr": "100"
+    },
+    {
+      "name": "H",
+      "expr": "50"
+    },
+    {
+      "name": "T",
+      "expr": "1.2"
+    },
+    {
+      "name": "Angle",
+      "expr": "45"
+    },
+    {
+      "name": "ReturnFlange",
+      "expr": "11"
+    }
+  ],
+  "features": [
+    {
+      "id": 1,
+      "name": "FlatContourSketch",
+      "suppressed": false,
+      "type": "sketch",
+      "plane": {
+        "type": "origin",
+        "name": "XY"
+      },
+      "sketch": {
+        "points": [
+          {
+            "id": "origin",
+            "pos": [
+              0.0,
+              0.0
+            ],
+            "fixed": true
+          },
+          {
+            "id": "p1",
+            "pos": [
+              0.0,
+              0.0
+            ],
+            "fixed": false
+          },
+          {
+            "id": "p2",
+            "pos": [
+              100.0,
+              0.0
+            ],
+            "fixed": false
+          },
+          {
+            "id": "p3",
+            "pos": [
+              170.71,
+              70.71
+            ],
+            "fixed": false
+          },
+          {
+            "id": "p4",
+            "pos": [
+              100.0,
+              141.42
+            ],
+            "fixed": false
+          },
+          {
+            "id": "p5",
+            "pos": [
+              0.0,
+              41.42
+            ],
+            "fixed": false
+          }
+        ],
+        "curves": [
+          {
+            "id": "c1",
+            "type": "line",
+            "a": 1,
+            "b": 2,
+            "construction": false
+          },
+          {
+            "id": "c2",
+            "type": "line",
+            "a": 2,
+            "b": 3,
+            "construction": false
+          },
+          {
+            "id": "c3",
+            "type": "line",
+            "a": 3,
+            "b": 4,
+            "construction": false
+          },
+          {
+            "id": "c4",
+            "type": "line",
+            "a": 4,
+            "b": 5,
+            "construction": false
+          },
+          {
+            "id": "c5",
+            "type": "line",
+            "a": 5,
+            "b": 1,
+            "construction": false
+          }
+        ],
+        "constraints": []
+      }
+    },
+    {
+      "id": 2,
+      "name": "SheetBase",
+      "suppressed": false,
+      "type": "sheet_base",
+      "sketch": 1,
+      "profiles": {
+        "type": "all"
+      },
+      "thickness": "T"
+    },
+    {
+      "id": 3,
+      "name": "SideFlangeOuter",
+      "suppressed": false,
+      "type": "sheet_flange",
+      "height": "H",
+      "angle": "90",
+      "radius": "1.5",
+      "corner_relief_shape": "round"
+    },
+    {
+      "id": 4,
+      "name": "SideFlangeInner",
+      "suppressed": false,
+      "type": "sheet_flange",
+      "height": "H",
+      "angle": "90",
+      "radius": "1.5",
+      "corner_relief_shape": "round"
+    },
+    {
+      "id": 5,
+      "name": "ReturnLipOuter",
+      "suppressed": false,
+      "type": "sheet_flange",
+      "height": "ReturnFlange",
+      "angle": "90",
+      "radius": "1.5"
+    },
+    {
+      "id": 6,
+      "name": "ReturnLipInner",
+      "suppressed": false,
+      "type": "sheet_flange",
+      "height": "ReturnFlange",
+      "angle": "90",
+      "radius": "1.5"
+    }
+  ],
+  "next_id": 7
+}

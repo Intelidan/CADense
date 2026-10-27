@@ -1,0 +1,12 @@
+[package]
+name = "cadense-dsf"
+version = "0.1.0"
+edition = "2021"
+description = "CADense Phase 2 Danish Sheet Fold (.dsf) container, Port Assignment, Rigid Feature Locking, and SolidCraft v0.23.1 command bridge"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+thiserror = "1.0"
+zip = { version = "2.1", default-features = false, features = ["deflate"] }

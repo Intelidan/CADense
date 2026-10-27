@@ -1,0 +1,20 @@
+[package]
+name = "cadense-studio"
+version = "0.2.0"
+edition = "2021"
+description = "CADense Studio — Cable Management Systems (CMS) & TruFold Sheet Metal Automation Workbench built on SolidCraft v0.23.1+ (Format 38)"
+license = "MIT OR Apache-2.0"
+
+[[bin]]
+name = "cadense-studio"
+path = "src/main.rs"
+
+[dependencies]
+cadense-dsf = { path = "../../crates/cadense-dsf" }
+cadense-order = { path = "../../crates/cadense-order" }
+cadense-ui = { path = "../../crates/cadense-ui" }
+cadense-dds-pdf = { path = "../../crates/cadense-dds-pdf" }
+egui.workspace = true
+eframe = { workspace = true, features = ["default_fonts", "wgpu"] }
+serde.workspace = true
+serde_json.workspace = true
