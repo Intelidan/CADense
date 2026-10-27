@@ -411,6 +411,9 @@ impl CadenseDsfStudio {
 pub mod logo;
 pub mod order_queue_panel;
 pub mod solidcraft_hook;
+pub mod theme;
+pub mod version;
+
 pub use logo::{
     CadenseLogoStyle, CadenseLogoWidget, CADENSE_BADGE_BG, CADENSE_COBALT_BLUE,
     CADENSE_SILVER_WHITE, CONCEPT_23_BADGE_SVG, CONCEPT_23_HORIZONTAL_LOCKUP_SVG,
@@ -418,5 +421,7 @@ pub use logo::{
 };
 pub use order_queue_panel::{OrderQueuePanel, OrderQueuePanelState};
 pub use solidcraft_hook::CadenseSolidCraftExtension;
+pub use theme::{CadenseTheme, ThemeColors};
+pub use version::{CadenseAppVersion, CURRENT_VERSION};
 
 
