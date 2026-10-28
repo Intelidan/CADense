@@ -586,7 +586,7 @@ impl CadenseLandingScreen {
 
         ui.horizontal(|ui| {
             ui.spacing_mut().item_spacing.x = tile_gap;
-            if Self::render_solidcraft_action_tile(ui, egui_phosphor::regular::ROCKET_LAUNCH, "Launch SolidCraft CAD", "Format 39 native 3D sheet metal bending", true, tile_w, colors) {
+            if Self::render_solidcraft_action_tile(ui, egui_phosphor::regular::ROCKET_LAUNCH, "Launch SolidCraft CAD", "Format 41 native 3D sheet metal bending", true, tile_w, colors) {
                 action = Some(LandingAction::LaunchSolidCraft { file: None });
             }
             if Self::render_solidcraft_action_tile(ui, egui_phosphor::regular::BROOM, "Pre-Flight DXF Cleaner", "Sanitize 2D laser-cuts & heal loops", false, tile_w, colors) {
@@ -755,7 +755,7 @@ impl CadenseLandingScreen {
                         ui.vertical(|ui| {
                             ui.horizontal(|ui| {
                                 ui.label(RichText::new(&dwg.filename).size(13.5).strong().color(colors.text_primary));
-                                self.status_pill_themed(ui, "Format 39 Ready", colors.badge_success_bg, colors.badge_success_text);
+                                self.status_pill_themed(ui, "Format 41 Ready", colors.badge_success_bg, colors.badge_success_text);
                             });
                             ui.label(
                                 RichText::new(format!("CMS Target: {} • {:.1} KB", dwg.product_hint, dwg.file_size_kb))
@@ -875,7 +875,7 @@ impl CadenseLandingScreen {
                                 ui.vertical(|ui| {
                                     ui.label(RichText::new(&dwg.filename).size(14.0).strong().color(colors.text_primary));
                                     ui.label(
-                                        RichText::new(format!("CMS Target: {} • Format 39 • {:.1} KB", dwg.product_hint, dwg.file_size_kb))
+                                        RichText::new(format!("CMS Target: {} • Format 41 • {:.1} KB", dwg.product_hint, dwg.file_size_kb))
                                             .size(12.0)
                                             .color(colors.text_secondary),
                                     );

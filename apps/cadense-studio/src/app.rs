@@ -1545,7 +1545,7 @@ impl eframe::App for CadenseStudioApp {
                                             ui.horizontal(|ui| {
                                                 ui.label(RichText::new(CURRENT_VERSION.app_version).size(12.5).strong().color(if is_blue { Color32::WHITE } else { colors.accent }));
                                                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                                                    ui.label(RichText::new("Format 39").size(11.0).color(if is_blue { Color32::from_rgb(186, 215, 255) } else { colors.text_muted }));
+                                                    ui.label(RichText::new(format!("Format {}", CURRENT_VERSION.solidcraft_format)).size(11.0).color(if is_blue { Color32::from_rgb(186, 215, 255) } else { colors.text_muted }));
                                                 });
                                             });
                                             ui.label(RichText::new(format!("{} {}", CURRENT_VERSION.core_engine, CURRENT_VERSION.core_version)).size(11.0).color(if is_blue { Color32::from_rgb(220, 235, 255) } else { colors.text_secondary }));
@@ -1744,7 +1744,7 @@ impl eframe::App for CadenseStudioApp {
             .show(ui, |ui| {
                 ui.horizontal(|ui| {
                     ui.colored_label(Color32::from_rgb(16, 185, 129), egui_phosphor::regular::CHECK_CIRCLE);
-                    ui.label(RichText::new("TruFold CMS Core v0.2.0 • SolidCraft v0.24.0 Format 39").size(11.0).color(colors.text_muted));
+                    ui.label(RichText::new(format!("{} {} • SolidCraft {} Format {}", CURRENT_VERSION.core_engine, CURRENT_VERSION.core_version, CURRENT_VERSION.solidcraft_version, CURRENT_VERSION.solidcraft_format)).size(11.0).color(colors.text_muted));
 
                     if let Some(status) = &self.solidcraft_status.clone() {
                         ui.separator();

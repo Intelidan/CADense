@@ -15,7 +15,7 @@ fn main() -> eframe::Result<()> {
     let icon_data = egui::IconData { rgba, width, height };
 
     let viewport = egui::ViewportBuilder::default()
-        .with_title("CADense Studio v1.0.0 — CMS Sheet Metal Automation (SolidCraft v0.24.0, Format 39)")
+        .with_title("CADense Studio v1.0.0 — CMS Sheet Metal Automation (SolidCraft v0.25.1, Format 41)")
         .with_inner_size([1480.0, 920.0])
         .with_min_inner_size([1080.0, 720.0])
         .with_icon(Arc::new(icon_data));

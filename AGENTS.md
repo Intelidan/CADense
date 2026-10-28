@@ -1,6 +1,6 @@
 # AGENTS.md — Instructions for AI Coding Agents in `CADense`
 
-Welcome to the **CADense** repository. This repository is an additive industrial sheet-metal and Cable Management Systems (CMS) automation platform built on top of **SolidCraft (`v0.24.0`, Format 39)**.
+Welcome to the **CADense** repository. This repository is an additive industrial sheet-metal and Cable Management Systems (CMS) automation platform built on top of **SolidCraft (`v0.25.1`, Format 41)**.
 
 Every AI agent (Antigravity IDE Agent, Gemini, Claude, Cursor, Windsurf) operating in this workspace **MUST** follow the rules below.
 
@@ -31,7 +31,7 @@ SolidCraft is a clean-room, pure-Rust parametric 3D CAD app (sketch solver, feat
 - **Never crash**: No `unwrap`/`expect`/`panic`/`unsafe` in non-test code; errors are `Result`, input is hostile (`skills/solidcraft-crash-safety/SKILL.md`).
 - **Everything is a command**: Programmatic calls never open dialogs (`skills/solidcraft-commands/SKILL.md`).
 - **Layering**: `geom` -> `sketch`/`kernel`/`render` -> `doc` -> `io` -> `engine` -> `ui-egui` -> `apps`. Only `crates/kernel` uses truck.
-- **Design Format**: Current design format is **Format 39** (SolidCraft v0.24.0).
+- **Design Format**: Current design format is **Format 41** (SolidCraft v0.25.1).
 
 ### Working on X: Read the Skill First
 | Working on | Read |

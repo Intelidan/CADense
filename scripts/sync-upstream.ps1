@@ -4,7 +4,7 @@
     Safely fetches and merges a new SolidCraft release tag or branch into CADense.
 #>
 param(
-    [string]$TargetTag = "v0.23.1"
+    [string]$TargetTag = "v0.25.1"
 )
 
 $ErrorActionPreference = "Stop"
@@ -29,7 +29,10 @@ Write-Host "Running Rule R1 Additive Check..."
 & "$PSScriptRoot/check-additive.ps1" -UpstreamRef $TargetTag
 
 Write-Host "Running cargo check on CADense crates..."
-cargo check -p cadense-dsf -p cadense-ui
+cargo check -p cadense-dsf -p cadense-order -p cadense-ui -p cadense-dds-pdf -p cadense-studio
+
+Write-Host "Running cargo test on CADense crates..."
+cargo test -p cadense-dsf -p cadense-order -p cadense-ui -p cadense-dds-pdf
 
 Write-Host "✅ Sync with SolidCraft $TargetTag succeeded on branch '$syncBranch'!" -ForegroundColor Green
 Write-Host "To finalize: git checkout main && git merge $syncBranch && git push origin main"

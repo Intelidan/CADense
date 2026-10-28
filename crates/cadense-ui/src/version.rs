@@ -53,7 +53,7 @@ pub const CURRENT_VERSION: CadenseAppVersion = CadenseAppVersion {
     release_channel: "Industrial Enterprise",
     core_engine: "TruFold CMS Core",
     core_version: "v0.2.0",
-    solidcraft_version: "v0.24.0",
-    solidcraft_format: 39,
-    release_date: "2026-10-27",
+    solidcraft_version: "v0.25.1",
+    solidcraft_format: 41,
+    release_date: "2026-10-28",
 };
