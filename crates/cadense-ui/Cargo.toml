@@ -8,6 +8,7 @@ license = "MIT OR Apache-2.0"
 [dependencies]
 cadense-dsf = { path = "../cadense-dsf" }
 cadense-order = { path = "../cadense-order" }
+solidcraft-ui-egui = { workspace = true }
 egui.workspace = true
 serde.workspace = true
 serde_json.workspace = true

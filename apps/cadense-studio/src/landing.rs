@@ -147,7 +147,13 @@ impl DxfGeometry2D {
         let mut slot_arcs: Vec<([f32; 2], f32, f32, f32)> = Vec::new();
         let mut poly_slot_count = 0;
 
-        let push_polyline = |pts: &[[f32; 2]], closed: bool, lines: &mut Vec<([f32; 2], [f32; 2])>, s_lines: &mut Vec<([f32; 2], [f32; 2])>, s_arcs: &mut Vec<([f32; 2], f32, f32, f32)>, s_count: &mut usize| {
+        let push_polyline = |pts: &[([f32; 2], f32)],
+                             closed: bool,
+                             lines: &mut Vec<([f32; 2], [f32; 2])>,
+                             r_arcs: &mut Vec<([f32; 2], f32, f32, f32)>,
+                             s_lines: &mut Vec<([f32; 2], [f32; 2])>,
+                             s_arcs: &mut Vec<([f32; 2], f32, f32, f32)>,
+                             s_count: &mut usize| {
             if pts.len() < 2 { return; }
 
             // Automatic geometric reconstruction of 8-vertex chamfered obround slots
@@ -157,7 +163,7 @@ impl DxfGeometry2D {
                 let mut max_x = f32::NEG_INFINITY;
                 let mut min_y = f32::INFINITY;
                 let mut max_y = f32::NEG_INFINITY;
-                for p in pts {
+                for (p, _) in pts {
                     min_x = min_x.min(p[0]);
                     max_x = max_x.max(p[0]);
                     min_y = min_y.min(p[1]);
@@ -187,11 +193,62 @@ impl DxfGeometry2D {
                 }
             }
 
-            for w in pts.windows(2) {
-                lines.push((w[0], w[1]));
+            // Check if this closed polyline is an obround slot with bulged semi-circles
+            let has_bulges = pts.iter().any(|(_, b)| b.abs() > 1e-4);
+            let is_slot_candidate = closed && pts.len() >= 4 && pts.len() <= 6 && has_bulges;
+
+            let n_pts = pts.len();
+            let seg_count = if closed { n_pts } else { n_pts - 1 };
+
+            for idx in 0..seg_count {
+                let (p1, b) = pts[idx];
+                let p2 = pts[(idx + 1) % n_pts].0;
+
+                if b.abs() > 1e-4 {
+                    // Bulge to Arc conversion: b = tan(theta / 4)
+                    let dx = p2[0] - p1[0];
+                    let dy = p2[1] - p1[1];
+                    let chord = (dx * dx + dy * dy).sqrt();
+                    if chord > 1e-4 {
+                        let theta = 4.0 * b.atan();
+                        let r = (chord / (2.0 * (theta * 0.5).sin())).abs();
+                        let mx = (p1[0] + p2[0]) * 0.5;
+                        let my = (p1[1] + p2[1]) * 0.5;
+                        let h = chord * (1.0 - b * b) / (4.0 * b);
+                        let nx = -dy / chord;
+                        let ny = dx / chord;
+                        let cx = mx + h * nx;
+                        let cy = my + h * ny;
+
+                        let mut sa = (p1[1] - cy).atan2(p1[0] - cx).to_degrees();
+                        let mut ea = (p2[1] - cy).atan2(p2[0] - cx).to_degrees();
+                        if sa < 0.0 { sa += 360.0; }
+                        if ea < 0.0 { ea += 360.0; }
+
+                        let arc_tuple = if b < 0.0 {
+                            ([cx, cy], r, ea, sa)
+                        } else {
+                            ([cx, cy], r, sa, ea)
+                        };
+
+                        if is_slot_candidate {
+                            s_arcs.push(arc_tuple);
+                        } else {
+                            r_arcs.push(arc_tuple);
+                        }
+                        continue;
+                    }
+                }
+
+                if is_slot_candidate {
+                    s_lines.push((p1, p2));
+                } else {
+                    lines.push((p1, p2));
+                }
             }
-            if closed {
-                lines.push((pts[pts.len() - 1], pts[0]));
+
+            if is_slot_candidate {
+                *s_count += 1;
             }
         };
 
@@ -206,7 +263,7 @@ impl DxfGeometry2D {
         let mut radius = 0.0f32;
         let mut start_ang = 0.0f32;
         let mut end_ang = 360.0f32;
-        let mut poly_pts: Vec<[f32; 2]> = Vec::new();
+        let mut poly_pts: Vec<([f32; 2], f32)> = Vec::new();
         let mut poly_closed = false;
 
         while i + 1 < n {
@@ -232,7 +289,7 @@ impl DxfGeometry2D {
                     } else if cur_type == "ARC" {
                         raw_arcs.push((center, radius, start_ang, end_ang));
                     } else if cur_type == "LWPOLYLINE" {
-                        push_polyline(&poly_pts, poly_closed, &mut raw_lines, &mut slot_lines, &mut slot_arcs, &mut poly_slot_count);
+                        push_polyline(&poly_pts, poly_closed, &mut raw_lines, &mut raw_arcs, &mut slot_lines, &mut slot_arcs, &mut poly_slot_count);
                     }
                 }
                 cur_type = val;
@@ -254,7 +311,7 @@ impl DxfGeometry2D {
                 p1[0] = v;
                 center[0] = v;
                 if cur_type == "LWPOLYLINE" {
-                    poly_pts.push([v, 0.0]);
+                    poly_pts.push(([v, 0.0], 0.0));
                 }
             } else if code == "20" {
                 let v = val.parse::<f32>().unwrap_or(0.0);
@@ -262,8 +319,12 @@ impl DxfGeometry2D {
                 center[1] = v;
                 if cur_type == "LWPOLYLINE" && !poly_pts.is_empty() {
                     let last = poly_pts.len() - 1;
-                    poly_pts[last][1] = v;
+                    poly_pts[last].0[1] = v;
                 }
+            } else if code == "42" && cur_type == "LWPOLYLINE" && !poly_pts.is_empty() {
+                let b = val.parse::<f32>().unwrap_or(0.0);
+                let last = poly_pts.len() - 1;
+                poly_pts[last].1 = b;
             } else if code == "11" {
                 p2[0] = val.parse::<f32>().unwrap_or(0.0);
             } else if code == "21" {
@@ -283,7 +344,7 @@ impl DxfGeometry2D {
             } else if cur_type == "ARC" {
                 raw_arcs.push((center, radius, start_ang, end_ang));
             } else if cur_type == "LWPOLYLINE" {
-                push_polyline(&poly_pts, poly_closed, &mut raw_lines, &mut slot_lines, &mut slot_arcs, &mut poly_slot_count);
+                push_polyline(&poly_pts, poly_closed, &mut raw_lines, &mut raw_arcs, &mut slot_lines, &mut slot_arcs, &mut poly_slot_count);
             }
         }
 
@@ -313,11 +374,21 @@ impl DxfGeometry2D {
         let mut classified_arcs = Vec::new();
         let mut arc_obrounds = 0;
         let relief_cuts = 0;
+        let mut slot_arc_endpoints: Vec<[f32; 2]> = Vec::new();
 
         for (c, r, sa, ea) in raw_arcs {
-            if (2.5..=6.0).contains(&r) {
+            if (2.0..=8.0).contains(&r) {
                 classified_arcs.push((c, r, sa, ea, DxfEntityKind::SlotOrPerforation));
                 arc_obrounds += 1;
+
+                let mut sweep = ea - sa;
+                if sweep <= 0.0 {
+                    sweep += 360.0;
+                }
+                let sar = sa.to_radians();
+                let ear = (sa + sweep).to_radians();
+                slot_arc_endpoints.push([c[0] + r * sar.cos(), c[1] + r * sar.sin()]);
+                slot_arc_endpoints.push([c[0] + r * ear.cos(), c[1] + r * ear.sin()]);
             } else {
                 classified_arcs.push((c, r, sa, ea, DxfEntityKind::Outline));
             }
@@ -327,30 +398,42 @@ impl DxfGeometry2D {
         // Add reconstructed slot geometry directly as SlotOrPerforation (Green)
         for (c, r, sa, ea) in slot_arcs {
             classified_arcs.push((c, r, sa, ea, DxfEntityKind::SlotOrPerforation));
+            let mut sweep = ea - sa;
+            if sweep <= 0.0 {
+                sweep += 360.0;
+            }
+            let sar = sa.to_radians();
+            let ear = (sa + sweep).to_radians();
+            slot_arc_endpoints.push([c[0] + r * sar.cos(), c[1] + r * sar.sin()]);
+            slot_arc_endpoints.push([c[0] + r * ear.cos(), c[1] + r * ear.sin()]);
         }
         for (a, b) in slot_lines {
             classified_lines.push((a, b, DxfEntityKind::SlotOrPerforation));
         }
 
+        // Classify lines: If a line connects to a slot arc endpoint, it is part of the slot
         for (a, b) in raw_lines {
             let dx = b[0] - a[0];
             let dy = b[1] - a[1];
             let len = (dx * dx + dy * dy).sqrt();
+
+            let touches_slot_arc = slot_arc_endpoints.iter().any(|ep| {
+                let d1 = (a[0] - ep[0]).hypot(a[1] - ep[1]);
+                let d2 = (b[0] - ep[0]).hypot(b[1] - ep[1]);
+                d1 < 2.5 || d2 < 2.5
+            });
+
             let angle_deg = (dy.atan2(dx).to_degrees()).abs();
-
-            // Normalized angle modulo 180 degrees ensures both left-to-right (0 deg)
-            // and right-to-left (180 deg) slot sides are detected as slots!
             let norm_ang = angle_deg % 180.0;
-            let is_slot_orientation = norm_ang < 6.0
-                || (norm_ang - 180.0).abs() < 6.0
-                || (norm_ang - 90.0).abs() < 6.0
-                || (norm_ang - 45.0).abs() < 6.0
-                || (norm_ang - 135.0).abs() < 6.0;
+            let is_slot_orientation = norm_ang < 10.0
+                || (norm_ang - 180.0).abs() < 10.0
+                || (norm_ang - 90.0).abs() < 10.0
+                || (norm_ang - 45.0).abs() < 10.0
+                || (norm_ang - 135.0).abs() < 10.0;
 
-            if (len >= 5.0 && len <= 45.0) && is_slot_orientation {
+            if touches_slot_arc || ((len >= 3.0 && len <= 45.0) && is_slot_orientation && a[0] > (min_x + 3.0) && a[0] < (max_x - 3.0) && a[1] > (min_y + 3.0) && a[1] < (max_y - 3.0)) {
                 classified_lines.push((a, b, DxfEntityKind::SlotOrPerforation));
             } else {
-                // All boundary perimeter lines (horizontal, vertical, or angled 45/22.5 deg) are Outline
                 classified_lines.push((a, b, DxfEntityKind::Outline));
             }
         }
@@ -362,8 +445,12 @@ impl DxfGeometry2D {
             endpoints.push(*b);
         }
         for (c, r, sa, ea, _) in &classified_arcs {
+            let mut sweep = ea - sa;
+            if sweep <= 0.0 {
+                sweep += 360.0;
+            }
             let sar = sa.to_radians();
-            let ear = ea.to_radians();
+            let ear = (sa + sweep).to_radians();
             endpoints.push([c[0] + r * sar.cos(), c[1] + r * sar.sin()]);
             endpoints.push([c[0] + r * ear.cos(), c[1] + r * ear.sin()]);
         }
@@ -389,7 +476,7 @@ impl DxfGeometry2D {
             }
         }
 
-        Some(Self {
+        let mut geom = Self {
             min_x,
             max_x,
             min_y,
@@ -399,7 +486,128 @@ impl DxfGeometry2D {
             obround_count: total_obrounds,
             relief_cut_count: relief_cuts,
             abnormalities,
-        })
+        };
+        geom.center_at_origin();
+        Some(geom)
+    }
+
+    /// Centers all geometry vertices, lines, and arcs so the bounding box center is at (0.0, 0.0).
+    /// Returns the offset (cx, cy) subtracted.
+    pub fn center_at_origin(&mut self) -> [f32; 2] {
+        let cx = (self.min_x + self.max_x) * 0.5;
+        let cy = (self.min_y + self.max_y) * 0.5;
+
+        self.min_x -= cx;
+        self.max_x -= cx;
+        self.min_y -= cy;
+        self.max_y -= cy;
+
+        for (p1, p2, _) in &mut self.lines {
+            p1[0] -= cx;
+            p1[1] -= cy;
+            p2[0] -= cx;
+            p2[1] -= cy;
+        }
+
+        for (c, _r, _sa, _ea, _) in &mut self.arcs {
+            c[0] -= cx;
+            c[1] -= cy;
+        }
+
+        for pt in &mut self.abnormalities {
+            pt[0] -= cx;
+            pt[1] -= cy;
+        }
+
+        [cx, cy]
+    }
+
+    /// Extracts closed 2D outer blank contour and hole/slot loops for `DsfRiggedSheet`.
+    pub fn to_dxf_loops(&self) -> (cadense_dsf::Loop2D, Vec<cadense_dsf::Loop2D>) {
+        let mut raw_outline_segments = Vec::new();
+        for (p1, p2, kind) in &self.lines {
+            if *kind == DxfEntityKind::Outline || *kind == DxfEntityKind::ReliefCut {
+                raw_outline_segments.push((*p1, *p2));
+            }
+        }
+        for (arc_c, r, a_start, a_end, kind) in &self.arcs {
+            if *kind == DxfEntityKind::Outline || *kind == DxfEntityKind::ReliefCut {
+                let steps = 14;
+                let mut sweep = a_end - a_start;
+                if sweep <= 0.0 {
+                    sweep += 360.0;
+                }
+                let mut prev = None;
+                for s in 0..=steps {
+                    let t = s as f32 / steps as f32;
+                    let ang = (a_start + t * sweep).to_radians();
+                    let pt = [arc_c[0] + r * ang.cos(), arc_c[1] + r * ang.sin()];
+                    if let Some(p_prev) = prev {
+                        raw_outline_segments.push((p_prev, pt));
+                    }
+                    prev = Some(pt);
+                }
+            }
+        }
+
+        let mut ordered_contour: Vec<[f64; 2]> = Vec::new();
+        if !raw_outline_segments.is_empty() {
+            let mut remaining = raw_outline_segments.clone();
+            let mut cur_pt = remaining[0].0;
+            ordered_contour.push([cur_pt[0] as f64, cur_pt[1] as f64]);
+
+            while !remaining.is_empty() {
+                let mut found_idx = None;
+                for (i, (p1, p2)) in remaining.iter().enumerate() {
+                    let d1 = (cur_pt[0] - p1[0]).hypot(cur_pt[1] - p1[1]);
+                    let d2 = (cur_pt[0] - p2[0]).hypot(cur_pt[1] - p2[1]);
+                    if d1 < 2.0 {
+                        found_idx = Some((i, *p2));
+                        break;
+                    } else if d2 < 2.0 {
+                        found_idx = Some((i, *p1));
+                        break;
+                    }
+                }
+
+                if let Some((idx, next_pt)) = found_idx {
+                    remaining.swap_remove(idx);
+                    ordered_contour.push([next_pt[0] as f64, next_pt[1] as f64]);
+                    cur_pt = next_pt;
+                } else {
+                    let next_seg = remaining.swap_remove(0);
+                    cur_pt = next_seg.1;
+                    ordered_contour.push([next_seg.0[0] as f64, next_seg.0[1] as f64]);
+                    ordered_contour.push([cur_pt[0] as f64, cur_pt[1] as f64]);
+                }
+            }
+        }
+
+        let outer = if ordered_contour.len() >= 3 {
+            cadense_dsf::Loop2D::new(ordered_contour)
+        } else {
+            let w = (self.max_x - self.min_x).abs() as f64;
+            let h = (self.max_y - self.min_y).abs() as f64;
+            cadense_dsf::Loop2D::rectangular_blank(w.max(50.0), h.max(50.0))
+        };
+
+        let mut hole_loops = Vec::new();
+        for (p1, p2, kind) in &self.lines {
+            if *kind == DxfEntityKind::SlotOrPerforation {
+                let cx = ((p1[0] + p2[0]) * 0.5) as f64;
+                let cy = ((p1[1] + p2[1]) * 0.5) as f64;
+                let hw = 10.0;
+                let hh = 4.0;
+                hole_loops.push(cadense_dsf::Loop2D::new(vec![
+                    [cx - hw, cy - hh],
+                    [cx + hw, cy - hh],
+                    [cx + hw, cy + hh],
+                    [cx - hw, cy + hh],
+                ]));
+            }
+        }
+
+        (outer, hole_loops)
     }
 }
 
@@ -1387,11 +1595,11 @@ impl CadenseLandingScreen {
 
                         ui.add_space(6.0);
 
-                        // Filename: Strictly 1 line with truncation and hover tooltip
+                        // Filename: Strictly 1 line with bold high-contrast typography
                         ui.add(
                             egui::Label::new(
                                 RichText::new(&item.filename)
-                                    .size(if card_h > 250.0 { 13.0 } else { 12.0 })
+                                    .size(if card_h > 250.0 { 14.5 } else { 13.5 })
                                     .strong()
                                     .color(colors.text_primary),
                             )
@@ -1399,7 +1607,7 @@ impl CadenseLandingScreen {
                         )
                         .on_hover_text(&item.filename);
 
-                        // Dimensions & Specs: Strictly 1 line with truncation
+                        // Dimensions & Specs: Strictly 1 line with high readability
                         let specs = format!(
                             "{:.0} × {:.0} mm • {} Slots • {:.1} KB",
                             item.envelope_w, item.envelope_h, item.obround_count, item.file_size_kb
@@ -1407,7 +1615,8 @@ impl CadenseLandingScreen {
                         ui.add(
                             egui::Label::new(
                                 RichText::new(specs)
-                                    .size(11.0)
+                                    .size(12.0)
+                                    .strong()
                                     .color(colors.text_secondary),
                             )
                             .truncate(),
@@ -1416,42 +1625,42 @@ impl CadenseLandingScreen {
 
                         ui.add_space(8.0);
 
-                        // Action Buttons Row: Inspect/Clean + Open in SolidCraft
+                        // Action Buttons Row: Inspect/Clean + CMS TruFold + SolidCraft CAD
                         ui.horizontal(|ui| {
-                            if card_h >= 240.0 {
-                                let inspect_btn = egui::Button::new(RichText::new(format!("{} Inspect & Clean", egui_phosphor::regular::MAGNIFYING_GLASS)).size(11.5).strong().color(colors.accent))
-                                    .fill(colors.accent_subtle)
-                                    .corner_radius(5.0);
-                                if ui.add(inspect_btn).clicked() {
-                                    open_cleaner = true;
-                                }
+                            ui.spacing_mut().item_spacing.x = 5.0;
 
-                                let sc_card_btn = egui::Button::new(
-                                    RichText::new(format!("{} SolidCraft CAD ↗", egui_phosphor::regular::ROCKET_LAUNCH))
-                                        .size(11.5)
-                                        .strong()
-                                        .color(Color32::WHITE),
-                                )
-                                .fill(colors.accent)
-                                .corner_radius(5.0);
+                            let inspect_btn = egui::Button::new(RichText::new(format!("{} Inspect", egui_phosphor::regular::MAGNIFYING_GLASS)).size(11.5).strong().color(colors.accent))
+                                .fill(colors.accent_subtle)
+                                .corner_radius(4.0);
+                            if ui.add(inspect_btn).on_hover_text("Open Pre-Flight Inspection & Loop Healing dialog").clicked() {
+                                open_cleaner = true;
+                            }
 
-                                if ui.add(sc_card_btn).on_hover_text("Open this flat DXF directly in SolidCraft CAD for sheet metal bending operations").clicked() {
-                                    action = Some(LandingAction::OpenCleanDxfInSolidCraft(item.file_path.clone()));
-                                }
-                            } else {
-                                let inspect_btn = egui::Button::new(RichText::new(format!("{} Inspect", egui_phosphor::regular::MAGNIFYING_GLASS)).size(10.5).strong().color(colors.accent))
-                                    .fill(colors.accent_subtle)
-                                    .corner_radius(4.0);
-                                if ui.add(inspect_btn).clicked() {
-                                    open_cleaner = true;
-                                }
+                            let trufold_btn = egui::Button::new(
+                                RichText::new(format!("{} TruFold", egui_phosphor::regular::LIGHTNING))
+                                    .size(11.5)
+                                    .strong()
+                                    .color(Color32::from_rgb(16, 185, 129)),
+                            )
+                            .fill(Color32::from_rgba_unmultiplied(16, 185, 129, 36))
+                            .stroke(Stroke::new(1.0, Color32::from_rgba_unmultiplied(16, 185, 129, 140)))
+                            .corner_radius(4.0);
 
-                                let sc_btn = egui::Button::new(RichText::new(format!("{} CAD", egui_phosphor::regular::ROCKET_LAUNCH)).size(10.5).strong().color(Color32::WHITE))
-                                    .fill(colors.accent)
-                                    .corner_radius(4.0);
-                                if ui.add(sc_btn).clicked() {
-                                    action = Some(LandingAction::OpenCleanDxfInSolidCraft(item.file_path.clone()));
-                                }
+                            if ui.add(trufold_btn).on_hover_text("Send this flat DXF directly to Stage 3 CMS TruFold for folding simulation & port constraints").clicked() {
+                                action = Some(LandingAction::SendDrawingToCmsWorkbench(item.file_path.clone()));
+                            }
+
+                            let sc_card_btn = egui::Button::new(
+                                RichText::new(format!("{} SolidCraft", egui_phosphor::regular::ROCKET_LAUNCH))
+                                    .size(11.5)
+                                    .strong()
+                                    .color(Color32::WHITE),
+                            )
+                            .fill(colors.accent)
+                            .corner_radius(4.0);
+
+                            if ui.add(sc_card_btn).on_hover_text("Open this flat DXF directly in SolidCraft CAD for sheet metal bending operations").clicked() {
+                                action = Some(LandingAction::OpenCleanDxfInSolidCraft(item.file_path.clone()));
                             }
                         });
                     });
@@ -1544,11 +1753,19 @@ impl CadenseLandingScreen {
 
                             // Right actions
                             ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                                let sc_btn = egui::Button::new(RichText::new(format!("{} CAD", egui_phosphor::regular::ROCKET_LAUNCH)).size(11.0).strong().color(Color32::WHITE))
+                                let sc_btn = egui::Button::new(RichText::new(format!("{} CAD", egui_phosphor::regular::ROCKET_LAUNCH)).size(11.5).strong().color(Color32::WHITE))
                                     .fill(colors.accent)
                                     .corner_radius(4.0);
                                 if ui.add(sc_btn).on_hover_text("Open in SolidCraft CAD").clicked() {
                                     action = Some(LandingAction::OpenCleanDxfInSolidCraft(item.file_path.clone()));
+                                }
+
+                                let trufold_btn = egui::Button::new(RichText::new(format!("{} TruFold", egui_phosphor::regular::LIGHTNING)).size(11.5).strong().color(Color32::from_rgb(16, 185, 129)))
+                                    .fill(Color32::from_rgba_unmultiplied(16, 185, 129, 36))
+                                    .stroke(Stroke::new(1.0, Color32::from_rgba_unmultiplied(16, 185, 129, 140)))
+                                    .corner_radius(4.0);
+                                if ui.add(trufold_btn).on_hover_text("Send to Stage 3 CMS TruFold for folding simulation & port constraints").clicked() {
+                                    action = Some(LandingAction::SendDrawingToCmsWorkbench(item.file_path.clone()));
                                 }
 
                                 if ui.small_button(egui_phosphor::regular::MAGNIFYING_GLASS).on_hover_text("Inspect & Clean").clicked() {
@@ -1644,6 +1861,12 @@ impl CadenseLandingScreen {
                                 ui.horizontal(|ui| {
                                     if ui.button(RichText::new(format!("{} Inspect", egui_phosphor::regular::MAGNIFYING_GLASS)).size(11.0)).clicked() {
                                         inspect_path = Some((item.file_path.clone(), item.category.clone()));
+                                    }
+                                    let trufold_btn = egui::Button::new(RichText::new(format!("{} TruFold", egui_phosphor::regular::LIGHTNING)).size(11.0).strong().color(Color32::from_rgb(16, 185, 129)))
+                                        .fill(Color32::from_rgba_unmultiplied(16, 185, 129, 36))
+                                        .corner_radius(4.0);
+                                    if ui.add(trufold_btn).clicked() {
+                                        action = Some(LandingAction::SendDrawingToCmsWorkbench(item.file_path.clone()));
                                     }
                                     let sc_btn = egui::Button::new(RichText::new(format!("{} SolidCraft CAD", egui_phosphor::regular::ROCKET_LAUNCH)).size(11.0).strong().color(Color32::WHITE))
                                         .fill(colors.accent)
@@ -2149,21 +2372,39 @@ impl CadenseLandingScreen {
 
                     ui.add_space(8.0);
 
-                    // Button to Open in SolidCraft for Bending Procedure
-                    let sc_btn = egui::Button::new(
-                        RichText::new(format!("{} Open in SolidCraft for Bending Procedure ↗", egui_phosphor::regular::ROCKET_LAUNCH))
-                            .size(13.5)
-                            .strong()
-                            .color(Color32::WHITE),
-                    )
-                    .fill(colors.accent)
-                    .corner_radius(6.0)
-                    .min_size(Vec2::new(320.0, 38.0));
+                    // Buttons: Open in SolidCraft + Send to CMS TruFold
+                    ui.horizontal(|ui| {
+                        let trufold_modal_btn = egui::Button::new(
+                            RichText::new(format!("{} Send to CMS TruFold Rigging", egui_phosphor::regular::LIGHTNING))
+                                .size(13.5)
+                                .strong()
+                                .color(Color32::from_rgb(16, 185, 129)),
+                        )
+                        .fill(Color32::from_rgba_unmultiplied(16, 185, 129, 40))
+                        .stroke(Stroke::new(1.2, Color32::from_rgb(16, 185, 129)))
+                        .corner_radius(6.0)
+                        .min_size(Vec2::new(280.0, 38.0));
 
-                    if ui.add(sc_btn).on_hover_text("Open this DXF file in SolidCraft CAD for sheet metal bending operations").clicked() {
-                        action = Some(LandingAction::OpenCleanDxfInSolidCraft(self.cleaner_state.input_path.clone()));
-                        should_close = true;
-                    }
+                        if ui.add(trufold_modal_btn).on_hover_text("Open this cleaned DXF in Stage 3 CMS TruFold for folding simulation & port constraints").clicked() {
+                            action = Some(LandingAction::SendDrawingToCmsWorkbench(self.cleaner_state.input_path.clone()));
+                            should_close = true;
+                        }
+
+                        let sc_btn = egui::Button::new(
+                            RichText::new(format!("{} Open in SolidCraft CAD ↗", egui_phosphor::regular::ROCKET_LAUNCH))
+                                .size(13.5)
+                                .strong()
+                                .color(Color32::WHITE),
+                        )
+                        .fill(colors.accent)
+                        .corner_radius(6.0)
+                        .min_size(Vec2::new(280.0, 38.0));
+
+                        if ui.add(sc_btn).on_hover_text("Open this DXF file in SolidCraft CAD for sheet metal bending operations").clicked() {
+                            action = Some(LandingAction::OpenCleanDxfInSolidCraft(self.cleaner_state.input_path.clone()));
+                            should_close = true;
+                        }
+                    });
                 });
 
                 if let Some(saved) = &self.cleaner_state.saved_success_path {
@@ -2399,6 +2640,12 @@ mod tests {
             assert!(g.lines.len() > 0 || g.arcs.len() > 0, "Should have geometric entities");
             assert!(g.max_x > g.min_x, "Max X should exceed Min X");
             assert!(g.max_y > g.min_y, "Max Y should exceed Min Y");
+        }
+
+        let riser_path = r"d:\RustProjects\cadense\assets\dxf\trunking_accessories\45_deg_inside_riser_100x100.dxf";
+        if Path::new(riser_path).exists() {
+            let rg = DxfGeometry2D::parse_from_file(riser_path, 0.5);
+            assert!(rg.is_some(), "Should parse 45_deg_inside_riser_100x100.dxf");
         }
     }
 

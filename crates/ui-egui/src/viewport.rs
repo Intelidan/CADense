@@ -4443,6 +4443,10 @@ pub fn show(app: &mut SolveApp, ui: &mut egui::Ui) {
     if let Some(tl) = app.tool.as_ref() {
         crate::tools::preview(app, tl, &painter, &proj);
     }
+    // === [CADENSE-HOOK: CMS truFold Viewport Overlay & Interactive Hinge Drawing] ===
+    if app.ui.tab == "CMS TRUFOLD" {
+        solidcraft_cms::ui::render_cms_viewport(ui, &painter, rect);
+    }
     crate::canvas::show(app, ui, &painter, &proj);
     crate::sketch_tools::show(app, ui, &painter, &proj);
     crate::sketch_dims::show(app, ui, &proj);

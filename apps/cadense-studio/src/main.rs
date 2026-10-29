@@ -4,6 +4,7 @@
 
 mod app;
 mod landing;
+mod solid_renderer;
 
 use app::CadenseStudioApp;
 use cadense_ui::CadenseLogoWidget;
@@ -26,8 +27,8 @@ fn main() -> eframe::Result<()> {
         "CADense Studio",
         native_options,
         Box::new(|cc| {
-            // Register Phosphor Icons font directly into egui
-            let mut fonts = egui::FontDefinitions::default();
+            // Register SolidCraft bundled IBM Plex Sans interface fonts (400, 500, 600, 700) + Mono + Phosphor icons
+            let mut fonts = solidcraft_ui_egui::fonts::base_font_definitions();
             egui_phosphor::add_to_fonts(&mut fonts, egui_phosphor::Variant::Regular);
             cc.egui_ctx.set_fonts(fonts);
 

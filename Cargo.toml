@@ -40,6 +40,7 @@ solidcraft-space-mouse = { path = "crates/space-mouse" }
 solidcraft-mcp = { path = "crates/mcp" }
 solidcraft-derive = { path = "crates/derive" }
 solidcraft-3dx-client = { path = "crates/threedx-client" }
+solidcraft-cms = { path = "crates/solidcraft_cms" }
 
 # foundation
 thiserror = "2"

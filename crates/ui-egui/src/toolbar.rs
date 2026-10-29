@@ -1124,7 +1124,7 @@ fn ribbon_tabs(app: &mut SolveApp, ui: &mut egui::Ui, row: Rect) {
                 }
             });
     });
-    if matches!(app.ui.tab.as_str(), "SKETCH" | "SHEET METAL") {
+    if matches!(app.ui.tab.as_str(), "SKETCH" | "SHEET METAL" | "CMS TRUFOLD") {
         ui.painter().line_segment(
             [row.left_bottom() - vec2(0.0, 1.0), row.right_bottom() - vec2(0.0, 1.0)],
             Stroke::new(2.0, panel_accent(&t, &app.ui.tab, "")),
@@ -1256,6 +1256,12 @@ pub fn toolbar(app: &mut SolveApp, ui: &mut egui::Ui) {
         ribbon_tabs(app, ui, Rect::from_min_max(pos2(ribbon_left, r.top()), pos2(r.right(), r.top() + TAB_ROW_HEIGHT)));
         // Panels.
         let tab = app.ui.tab.clone();
+        // === [CADENSE-HOOK: CMS truFold Dual-Ribbon Renderer Delegation] ===
+        if tab == "CMS TRUFOLD" {
+            let panel_rect = Rect::from_min_max(pos2(ribbon_left, r.top() + TAB_ROW_HEIGHT), pos2(r.right(), r.bottom()));
+            solidcraft_cms::ui::render_cms_ribbon(ui, panel_rect);
+            return;
+        }
         // The command whose tool or dialog is open right now, shown pressed in the toolbar.
         let running: Option<String> = match (&app.tool, &app.dialog) {
             (Some(tool), _) => Some(tool.cmd.to_string()),

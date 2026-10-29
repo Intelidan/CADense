@@ -5,9 +5,7 @@
 //! 2. `WarmClay` (Warm paper & terracotta — natural cream surfaces, warm charcoal typography).
 //! 3. `DeepObsidian` (Deep midnight navy & electric cyan — premium layered dark mode, no flat gray).
 
-use egui::{
-    Color32, CornerRadius, FontFamily, FontId, Margin, Stroke, TextStyle, Visuals,
-};
+use egui::{Color32, FontFamily, FontId, TextStyle};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum CadenseTheme {
@@ -185,9 +183,9 @@ impl CadenseTheme {
                 bg_input: Color32::from_rgb(0x1D, 0x20, 0x21),
                 border_subtle: Color32::from_rgb(0x50, 0x49, 0x45),
                 border_strong: Color32::from_rgb(0x66, 0x5C, 0x54),
-                text_primary: Color32::from_rgb(0xEB, 0xDB, 0xB2),  // Gruvbox fg #EBDBB2
-                text_secondary: Color32::from_rgb(0xD5, 0xC4, 0xA1),// Gruvbox fg2 #D5C4A1
-                text_muted: Color32::from_rgb(0xA8, 0x99, 0x84),    // Gruvbox gray #A89984
+                text_primary: Color32::from_rgb(0xFB, 0xF1, 0xC7),  // Gruvbox bright fg0 #FBF1C7 (High contrast)
+                text_secondary: Color32::from_rgb(0xEB, 0xDB, 0xB2),// Gruvbox clear fg1 #EBDBB2
+                text_muted: Color32::from_rgb(0xD5, 0xC4, 0xA1),    // Gruvbox legible fg2 #D5C4A1
                 accent: Color32::from_rgb(0x8E, 0xC0, 0x7C),        // Gruvbox Aqua #8EC07C
                 accent_hover: Color32::from_rgb(0x68, 0x9D, 0x6A),
                 accent_subtle: Color32::from_rgb(0x32, 0x44, 0x40),
@@ -215,70 +213,43 @@ impl CadenseTheme {
         }
     }
 
-    /// Dynamically applies the theme, colors, and typography scaling to the egui context.
+    /// Dynamically applies the theme, colors, and typography scaling to the egui context
+    /// using SolidCraft's core theme applicator.
     pub fn apply_to_ctx(&self, ctx: &egui::Context, font_scale: f32) {
-        let cols = self.colors();
-        let mut visuals = if self.is_dark() {
-            Visuals::dark()
-        } else {
-            Visuals::light()
+        let theme_file_name = match self {
+            Self::SolidCraftCobalt => "blueprint",
+            Self::ModernLight => "light",
+            Self::WarmClay => "clay",
+            Self::DeepObsidian => "dark",
+            Self::GruvboxDark => "gruvbox-dark",
         };
 
-        // Window & widget rounding
-        visuals.window_corner_radius = CornerRadius::same(10);
-        visuals.menu_corner_radius = CornerRadius::same(8);
-        visuals.widgets.noninteractive.corner_radius = CornerRadius::same(6);
-        visuals.widgets.inactive.corner_radius = CornerRadius::same(6);
-        visuals.widgets.hovered.corner_radius = CornerRadius::same(6);
-        visuals.widgets.active.corner_radius = CornerRadius::same(6);
-        visuals.widgets.open.corner_radius = CornerRadius::same(6);
+        let file = solidcraft_ui_egui::theme_files::find(theme_file_name, &[]);
+        let custom = file.map(|f| solidcraft_ui_egui::theme::Custom {
+            dark: f.base.is_dark(),
+            tokens: solidcraft_ui_egui::theme_files::resolve(f),
+        });
 
-        // Backgrounds & strokes
-        visuals.panel_fill = cols.bg_app;
-        visuals.window_fill = cols.bg_card;
-        visuals.window_stroke = Stroke::new(1.0, cols.border_subtle);
+        solidcraft_ui_egui::theme::set_dark(self.is_dark());
+        solidcraft_ui_egui::theme::set_custom(custom);
+        solidcraft_ui_egui::theme::apply(ctx);
 
-        // Widget colors
-        visuals.widgets.noninteractive.bg_fill = cols.bg_card;
-        visuals.widgets.noninteractive.bg_stroke = Stroke::new(1.0, cols.border_subtle);
-        visuals.widgets.noninteractive.fg_stroke = Stroke::new(1.0, cols.text_primary);
-
-        visuals.widgets.inactive.bg_fill = cols.bg_card_alt;
-        visuals.widgets.inactive.bg_stroke = Stroke::new(1.0, cols.border_subtle);
-        visuals.widgets.inactive.fg_stroke = Stroke::new(1.0, cols.text_secondary);
-
-        visuals.widgets.hovered.bg_fill = cols.accent_subtle;
-        visuals.widgets.hovered.bg_stroke = Stroke::new(1.2, cols.accent);
-        visuals.widgets.hovered.fg_stroke = Stroke::new(1.0, cols.text_primary);
-
-        visuals.widgets.active.bg_fill = cols.accent;
-        visuals.widgets.active.bg_stroke = Stroke::new(1.5, cols.accent_hover);
-        visuals.widgets.active.fg_stroke = Stroke::new(1.0, cols.accent_text);
-
-        visuals.selection.bg_fill = cols.accent;
-        visuals.selection.stroke = Stroke::new(1.0, cols.accent_hover);
-
-        ctx.set_theme(if self.is_dark() { egui::Theme::Dark } else { egui::Theme::Light });
-        ctx.set_visuals(visuals);
-
-        // Typography scale: Generous, readable font sizes (No more tiny unreadable fonts!)
+        // Adjust font scaling on top of SolidCraft IBM Plex typography
         let scale = font_scale.clamp(0.9, 1.4);
+        let t = solidcraft_ui_egui::theme::Tokens::get();
         ctx.global_style_mut(|style| {
             style.text_styles = [
-                (TextStyle::Heading, FontId::new(21.0 * scale, FontFamily::Proportional)),
-                (TextStyle::Name("Subheading".into()), FontId::new(16.5 * scale, FontFamily::Proportional)),
-                (TextStyle::Body, FontId::new(14.0 * scale, FontFamily::Proportional)),
-                (TextStyle::Button, FontId::new(14.0 * scale, FontFamily::Proportional)),
-                (TextStyle::Monospace, FontId::new(13.0 * scale, FontFamily::Monospace)),
-                (TextStyle::Small, FontId::new(12.0 * scale, FontFamily::Proportional)),
+                (TextStyle::Heading, FontId::new(t.font_heading * scale * 1.25, FontFamily::Proportional)),
+                (TextStyle::Name("Subheading".into()), FontId::new(t.font_subtitle * scale * 1.15, FontFamily::Proportional)),
+                (TextStyle::Body, FontId::new(t.font_body * scale * 1.10, FontFamily::Proportional)),
+                (TextStyle::Button, FontId::new(t.font_button * scale * 1.05, FontFamily::Proportional)),
+                (TextStyle::Monospace, FontId::new(t.font_body * scale, FontFamily::Monospace)),
+                (TextStyle::Small, FontId::new(t.font_small * scale * 1.05, FontFamily::Proportional)),
             ]
             .into();
 
-            // Comfortable spacing
-            style.spacing.item_spacing = egui::vec2(10.0, 10.0);
-            style.spacing.window_margin = Margin::same(16);
-            style.spacing.button_padding = egui::vec2(14.0, 8.0);
-            style.spacing.indent = 18.0;
+            style.spacing.item_spacing = egui::vec2(t.space_6, t.space_6);
+            style.spacing.button_padding = egui::vec2(t.space_8, t.space_4);
         });
     }
 }

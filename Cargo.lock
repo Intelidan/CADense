@@ -646,6 +646,9 @@ dependencies = [
  "egui-phosphor",
  "serde",
  "serde_json",
+ "solidcraft-geom",
+ "solidcraft-render",
+ "solidcraft-ui-egui",
 ]
 
 [[package]]
@@ -657,6 +660,7 @@ dependencies = [
  "egui",
  "serde",
  "serde_json",
+ "solidcraft-ui-egui",
  "uuid",
 ]
 
@@ -4376,6 +4380,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "solidcraft-cms"
+version = "0.25.1"
+dependencies = [
+ "egui",
+ "serde",
+ "serde_json",
+ "solidcraft-geom",
+ "thiserror 2.0.21",
+]
+
+[[package]]
 name = "solidcraft-derive"
 version = "0.25.1"
 dependencies = [
@@ -4553,6 +4568,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2 0.10.9",
+ "solidcraft-cms",
  "solidcraft-engine",
  "solidcraft-gpu",
  "solidcraft-space-mouse",

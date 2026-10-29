@@ -29,10 +29,10 @@ Write-Host "Running Rule R1 Additive Check..."
 & "$PSScriptRoot/check-additive.ps1" -UpstreamRef $TargetTag
 
 Write-Host "Running cargo check on CADense crates..."
-cargo check -p cadense-dsf -p cadense-order -p cadense-ui -p cadense-dds-pdf -p cadense-studio
+cargo check -p cadense-dsf -p cadense-order -p cadense-ui -p cadense-dds-pdf -p cadense-studio -p solidcraft-cms
 
 Write-Host "Running cargo test on CADense crates..."
-cargo test -p cadense-dsf -p cadense-order -p cadense-ui -p cadense-dds-pdf
+cargo test -p cadense-dsf -p cadense-order -p cadense-ui -p cadense-dds-pdf -p solidcraft-cms
 
 Write-Host "✅ Sync with SolidCraft $TargetTag succeeded on branch '$syncBranch'!" -ForegroundColor Green
 Write-Host "To finalize: git checkout main && git merge $syncBranch && git push origin main"

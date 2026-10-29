@@ -28,6 +28,7 @@ foreach ($line in $diffFiles) {
 
     $isCadensePath = (
         $path.StartsWith("crates/cadense-") -or
+        $path.StartsWith("crates/solidcraft_cms") -or
         $path.StartsWith("apps/cadense-") -or
         $path.StartsWith("scripts/") -or
         $path.StartsWith(".antigravity/") -or
@@ -38,6 +39,7 @@ foreach ($line in $diffFiles) {
         $path.StartsWith("assets/templates/") -or
         $path.StartsWith("drawings/cms_in_progress/") -or
         $path -eq "CADENSE_STATUS.md" -or
+        $path -eq "CMS_TRUFOLD_DUAL_RIBBON_IMPLEMENTATION_PLAN.md" -or
         $path -eq "dxf_analysis_report.md" -or
         $path -eq "Cargo.toml" -or
         $path -eq "Cargo.lock" -or

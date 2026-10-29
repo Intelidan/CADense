@@ -283,6 +283,9 @@ pub const SECTIONS: &[Section] = &[
     Section { tab: "SHEET METAL", panel: "OUTPUT", promoted: 2, ids: &["sheet.export_dxf", "sheet.export_bend_table"] },
     Section { tab: "SHEET METAL", panel: "RULES", promoted: 1, ids: &["sheet.manage_rules"] },
     Section { tab: "SHEET METAL", panel: "CONFIGURE", promoted: 2, ids: CONFIGURE },
+    // === [CADENSE-HOOK: CMS truFold Ribbon Section Definition] ===
+    Section { tab: "CMS TRUFOLD", panel: "FOLDING", promoted: 1, ids: &[] },
+    Section { tab: "CMS TRUFOLD", panel: "SCALING", promoted: 1, ids: &[] },
     // A frame starts from a sketch of its lines; its profile sizes are often parameters.
     Section { tab: "WELDMENTS", panel: "SKETCH", promoted: 1, ids: &["sketch.create"] },
     Section { tab: "WELDMENTS", panel: "CREATE", promoted: 1, ids: &["frame.member"] },
@@ -588,6 +591,8 @@ pub fn visible_tabs(app: &crate::SolveApp) -> Vec<&'static str> {
     // ordinary sketch or solid, so the tab cannot wait for a sheet body. A frame starts
     // from a sketch of its lines, so Weldments is always there too.
     tabs.push("SHEET METAL");
+    // === [CADENSE-HOOK: CMS truFold Tab Registration] ===
+    tabs.push("CMS TRUFOLD");
     tabs.push("WELDMENTS");
     tabs
 }

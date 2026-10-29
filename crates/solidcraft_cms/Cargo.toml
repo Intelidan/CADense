@@ -1,0 +1,16 @@
+[package]
+name = "solidcraft-cms"
+version = "0.25.1"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+description = "SolidCraft CMS truFold - Relaxed Rule-Free Bending & Parametric Multi-Port Scaling Engine"
+
+[dependencies]
+egui = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+solidcraft-geom = { workspace = true }
+thiserror = { workspace = true }
+
+
+[dev-dependencies]
