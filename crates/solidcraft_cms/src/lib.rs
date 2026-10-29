@@ -4,6 +4,7 @@
 //! and automated topological classification for Cable Management System (CMS) industrial products.
 
 pub mod batch;
+pub mod branding;
 pub mod data;
 pub mod eval;
 pub mod export;
@@ -15,6 +16,7 @@ pub mod ui;
 mod tests;
 
 pub use batch::*;
+pub use branding::*;
 pub use data::*;
 pub use eval::*;
 pub use export::*;

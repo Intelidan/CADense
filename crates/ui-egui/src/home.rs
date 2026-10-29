@@ -721,7 +721,7 @@ fn navigation(app: &SolveApp, ui: &mut egui::Ui, action: &mut Option<FileAction>
         ("home:settings", app.tr("home.settings"), format!("{primary},"), None, true, FileAction::Settings),
         ("home:shortcuts", app.tr("home.shortcuts"), String::new(), None, true, FileAction::Shortcuts),
         ("home:crashes", app.tr("home.crashes"), String::new(), None, true, FileAction::Crashes),
-        ("home:about", app.tr_label("About SolidCraft"), String::new(), None, true, FileAction::About),
+        ("home:about", "About CADense", String::new(), None, true, FileAction::About),
     ];
     for (index, (id, label, key, section, enabled, picked)) in nav.into_iter().enumerate() {
         if index == 4 || index == 8 {
@@ -756,6 +756,22 @@ fn content(app: &mut SolveApp, ui: &mut egui::Ui, action: &mut Option<FileAction
             ui.add_space(t.file_section_gap);
             if let Some((message, _, true)) = &app.status {
                 ui_kit::text(ui, message, ui_kit::Text::Error("home_status"));
+            }
+            // === [CADENSE-HOOK: CADense Home Hero Banner & Preset Launcher] ===
+            if app.home.section == Section::Start {
+                solidcraft_cms::branding::render_cadense_home_hero(ui, &mut |preset| {
+                    let mut s = solidcraft_cms::ui::session();
+                    match preset {
+                        "Reducer" => solidcraft_cms::ui::load_preset_reducer(&mut s),
+                        "Tee" => solidcraft_cms::ui::load_preset_unequal_tee(&mut s),
+                        "Bend" => solidcraft_cms::ui::load_preset_bend(&mut s),
+                        "Cross" => solidcraft_cms::ui::load_preset_cross(&mut s),
+                        _ => {}
+                    }
+                    app.ui.tab = "CMS TRUFOLD".to_string();
+                    app.home.open = false;
+                });
+                ui.add_space(t.file_section_gap);
             }
             match app.home.section {
                 Section::Start => start_content(app, ui, action),

@@ -22,11 +22,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// `FileVersion` and `ProductVersion` are the package version verbatim (`0.25.1`, `0.26.0-rc.1`):
 /// ArtCraft's launcher parses the `ProductVersion` string as semver, so a fourth `.0` would not
 /// read. The binary `FILEVERSION` fields need four numbers and take the leading `major.minor.patch`.
+// === [CADENSE-HOOK: CADense Windows Binary Properties] ===
 fn version_resource(version: &str) -> String {
     let mut numbers = version.split(['-', '+']).next().unwrap_or("").split('.').map(|p| p.parse::<u16>().unwrap_or(0));
     let mut next = || numbers.next().unwrap_or(0);
     let (major, minor, patch) = (next(), next(), next());
     format!(
-        "1 VERSIONINFO\nFILEVERSION {major},{minor},{patch},0\nPRODUCTVERSION {major},{minor},{patch},0\nFILEOS 0x40004\nFILETYPE 0x1\n{{\nBLOCK \"StringFileInfo\"\n{{\nBLOCK \"040904B0\"\n{{\nVALUE \"CompanyName\", \"SolidCraft contributors\"\nVALUE \"FileDescription\", \"SolidCraft, parametric 3D CAD\"\nVALUE \"FileVersion\", \"{version}\"\nVALUE \"InternalName\", \"solidcraft\"\nVALUE \"OriginalFilename\", \"solidcraft.exe\"\nVALUE \"ProductName\", \"SolidCraft\"\nVALUE \"ProductVersion\", \"{version}\"\n}}\n}}\nBLOCK \"VarFileInfo\"\n{{\nVALUE \"Translation\", 0x0409, 1200\n}}\n}}\n"
+        "1 VERSIONINFO\nFILEVERSION {major},{minor},{patch},0\nPRODUCTVERSION {major},{minor},{patch},0\nFILEOS 0x40004\nFILETYPE 0x1\n{{\nBLOCK \"StringFileInfo\"\n{{\nBLOCK \"040904B0\"\n{{\nVALUE \"CompanyName\", \"CADense Industrial Automation\"\nVALUE \"FileDescription\", \"CADense Sheet Metal & CMS Automation Platform\"\nVALUE \"FileVersion\", \"{version}\"\nVALUE \"InternalName\", \"cadense\"\nVALUE \"OriginalFilename\", \"cadense.exe\"\nVALUE \"ProductName\", \"CADense\"\nVALUE \"ProductVersion\", \"{version}\"\n}}\n}}\nBLOCK \"VarFileInfo\"\n{{\nVALUE \"Translation\", 0x0409, 1200\n}}\n}}\n"
     )
 }

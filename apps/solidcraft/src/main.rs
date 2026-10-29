@@ -718,8 +718,9 @@ fn app_viewport(custom_titlebar: bool) -> Result<egui::ViewportBuilder, eframe::
     #[cfg(not(target_os = "macos"))]
     let icon =
         egui::IconData { rgba: app_icon::rgba(64).map_err(|e| eframe::Error::AppCreation(std::io::Error::other(e).into()))?, width: 64, height: 64 };
+    // === [CADENSE-HOOK: CADense Window Title & Branding] ===
     Ok(egui::ViewportBuilder::default()
-        .with_title("SolidCraft")
+        .with_title("CADense — Sheet Metal & CMS Automation")
         .with_icon(icon)
         .with_inner_size([1600.0, 1000.0])
         .with_min_inner_size([960.0, 600.0])
@@ -748,7 +749,8 @@ impl Drop for DriverClient {
 
 fn main() -> eframe::Result {
     #[cfg(target_os = "macos")]
-    objc2_foundation::NSProcessInfo::processInfo().setProcessName(objc2_foundation::ns_string!("SolidCraft"));
+    // === [CADENSE-HOOK: CADense Process Name] ===
+    objc2_foundation::NSProcessInfo::processInfo().setProcessName(objc2_foundation::ns_string!("CADense"));
     mark("main");
     // Validate before legacy adoption, crash markers or any user preference read.
     let settings = settings_dir().map_err(|error| eframe::Error::AppCreation(error.into()))?;

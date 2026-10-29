@@ -25,11 +25,12 @@ pub struct HelpState {
     pub gpu: Option<String>,
 }
 
+// === [CADENSE-HOOK: CADense Diagnostic Info] ===
 /// One line per fact, for bug reports.
 pub fn diagnostics(app: &SolveApp) -> String {
     let renderer = if app.viewport.gpu.is_some() { "GPU" } else { "CPU" };
     format!(
-        "SolidCraft {VERSION} ({COMMIT}, built {BUILD_DATE})\nOS: {} {}\nRenderer: {renderer}{}\nWindow: {}\nDesign: {} ({} features, {} bodies)",
+        "CADense v1.0.0 (SolidCraft {VERSION}, {COMMIT}, built {BUILD_DATE})\nOS: {} {}\nRenderer: {renderer}{}\nWindow: {}\nDesign: {} ({} features, {} bodies)",
         std::env::consts::OS,
         std::env::consts::ARCH,
         app.help.gpu.as_ref().map(|g| format!(", {g}")).unwrap_or_default(),
@@ -167,18 +168,19 @@ fn about(app: &mut SolveApp, ctx: &egui::Context) {
     if !app.help.about {
         return;
     }
-    let (closed, action) = ui_kit::Window::new(egui::Id::new("sc_about"), "help", crate::i18n::tr_label("About SolidCraft"))
+    // === [CADENSE-HOOK: CADense About Dialog Rebranding] ===
+    let (closed, action) = ui_kit::Window::new(egui::Id::new("sc_about"), "help", crate::i18n::tr_label("About CADense"))
         .cards(2.0)
         .actions("", "Close", None)
         .show(ctx, true, |ui| {
             ui_kit::text(
                 ui,
-                &crate::i18n::format("help.build", &[("version", VERSION), ("commit", COMMIT), ("date", BUILD_DATE)]),
+                &format!("CADense v{} (TruFold CMS Engine v{})", solidcraft_cms::branding::CadenseVersion::VERSION, solidcraft_cms::branding::CadenseVersion::TRUFOLD_ENGINE_VERSION),
                 ui_kit::Text::Report("version", false),
             );
             ui_kit::text(
                 ui,
-                crate::i18n::tr_label("Open-source parametric 3D CAD in Rust. Licensed MIT OR Apache-2.0."),
+                &format!("Built on {}\n{}", solidcraft_cms::branding::CadenseVersion::UPSTREAM_ENGINE, solidcraft_cms::branding::CadenseVersion::TAGLINE),
                 ui_kit::Text::Note("description"),
             );
             let copy = ui_kit::button(ui, crate::i18n::tr_label("Copy diagnostic information"), ui_kit::Button::Normal);

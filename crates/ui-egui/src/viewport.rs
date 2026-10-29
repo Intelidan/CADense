@@ -4798,7 +4798,100 @@ pub fn show(app: &mut SolveApp, ui: &mut egui::Ui) {
     }
     // === [CADENSE-HOOK: CMS truFold Viewport Overlay & Interactive Hinge Drawing] ===
     if app.ui.tab == "CMS TRUFOLD" {
-        solidcraft_cms::ui::render_cms_viewport(ui, &painter, rect);
+        let active_plane = app
+            .session
+            .active_sketch
+            .and_then(|sid| app.session.world_state().sketch(sid).map(|ss| ss.plane))
+            .unwrap_or(Plane::XY);
+        let to_screen_fn = |p: Vec3| -> Option<egui::Pos2> {
+            proj.to_screen(p)
+        };
+        let screen_to_sketch_fn = |p: egui::Pos2| -> Option<(f64, f64)> {
+            let (o, d) = proj.ray(p);
+            let hit = active_plane.intersect_ray(o, d)?;
+            let local = active_plane.to_local(hit);
+            Some((local.x, local.y))
+        };
+        let cms_proj = solidcraft_cms::ui::CmsViewportProjection {
+            to_screen: &to_screen_fn,
+            screen_to_sketch: &screen_to_sketch_fn,
+            plane: active_plane,
+        };
+
+        let active_sketch_id = app.session.active_sketch.or_else(|| {
+            app.session.doc.features.iter().find_map(|f| {
+                if matches!(f.kind, solidcraft_engine::doc::FeatureKind::Sketch { .. }) {
+                    Some(f.id)
+                } else {
+                    None
+                }
+            })
+        });
+        let in_sketch = app.session.active_sketch.is_some();
+        let selected_curves: Vec<String> = app.session.selection.iter().filter_map(|s| {
+            if let solidcraft_engine::Sel::SketchCurve { id, .. } = s {
+                Some(id.clone())
+            } else {
+                None
+            }
+        }).collect();
+        let mut sketch_curves = Vec::new();
+        if let Some(sid) = active_sketch_id {
+            if let Some(solved) = app.session.world_state().sketch(sid) {
+                for c in &solved.sketch.curves {
+                    if let Some((a, b)) = c.kind.ends() {
+                        if a < solved.sketch.points.len() && b < solved.sketch.points.len() {
+                            let p0 = solved.sketch.points[a].pos;
+                            let p1 = solved.sketch.points[b].pos;
+                            sketch_curves.push(solidcraft_cms::ui::CmsSketchCurveInfo {
+                                id: c.id.clone(),
+                                start: (p0.x, p0.y),
+                                end: (p1.x, p1.y),
+                                is_construction: c.construction,
+                                is_selected: selected_curves.contains(&c.id),
+                            });
+                        }
+                    }
+                }
+            }
+        }
+
+        let existing_extrude = app.session.doc.features.iter().find(|f| {
+            matches!(f.kind, solidcraft_engine::doc::FeatureKind::Extrude { .. })
+        });
+        let existing_extrude_id = existing_extrude.map(|f| f.id);
+        let extrude_thickness = existing_extrude.and_then(|f| {
+            if let solidcraft_engine::doc::FeatureKind::Extrude { ref extent, .. } = f.kind {
+                app.session.doc.eval(&extent.distance, solidcraft_engine::doc::expr::Kind::Length).ok().map(|d| d.abs())
+                    .or_else(|| extent.distance.trim().trim_end_matches("mm").trim().parse::<f64>().ok())
+            } else {
+                None
+            }
+        });
+
+        let mut dispatch_fn = |action: solidcraft_cms::ui::CmsAppAction| -> Result<serde_json::Value, String> {
+            match action {
+                solidcraft_cms::ui::CmsAppAction::Run(cmd, params) => app.run(&cmd, params),
+                solidcraft_cms::ui::CmsAppAction::Start(cmd) => {
+                    app.start(&cmd);
+                    Ok(serde_json::Value::Null)
+                }
+                solidcraft_cms::ui::CmsAppAction::EditFeature(id) => {
+                    app.edit_feature(id);
+                    Ok(serde_json::Value::Null)
+                }
+            }
+        };
+        let mut bridge = solidcraft_cms::ui::CmsAppBridge {
+            in_sketch,
+            active_sketch_id,
+            selected_curves,
+            sketch_curves,
+            existing_extrude_id,
+            extrude_thickness,
+            dispatch: &mut dispatch_fn,
+        };
+        solidcraft_cms::ui::render_cms_viewport(ui, &painter, rect, Some(&cms_proj), Some(&mut bridge));
     }
     crate::canvas::show(app, ui, &painter, &proj);
     crate::sketch_tools::show(app, ui, &painter, &proj);

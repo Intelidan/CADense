@@ -314,17 +314,17 @@ pub fn app_bar(app: &mut SolveApp, ui: &mut egui::Ui) {
         let left = r.left() + if app.integrated_titlebar { crate::titlebar::TRAFFIC_LIGHTS } else { 0.0 };
         // Keep the current header controls and product name when merging the new mark.
         let compact_actions = r.right() - left < 640.0;
-        // Brand mark: the SolidCraft logo, drawn in code from the SVG's own coordinates
-        // (viewBox 357 x 412). Same 20 px height and centre as the old block.
+        // === [CADENSE-HOOK: CADense Brand Identity Mark & Title Lockup] ===
         {
+            let _ = crate::icons::glyphs::brand_mark;
             let c = pos2(left + 20.0, r.center().y);
-            crate::icons::glyphs::brand_mark(ui.painter(), c);
+            solidcraft_cms::branding::paint_cadense_brand_mark(ui.painter(), c, 22.0);
         }
         if !compact_actions {
             ui.painter().text(
                 pos2(left + 36.0, r.center().y),
                 Align2::LEFT_CENTER,
-                "SolidCraft",
+                "CADense",
                 crate::fonts::semibold(t.font_heading),
                 t.app_bar_text,
             );
@@ -1304,7 +1304,80 @@ pub fn toolbar(app: &mut SolveApp, ui: &mut egui::Ui) {
         // === [CADENSE-HOOK: CMS truFold Dual-Ribbon Renderer Delegation] ===
         if tab == "CMS TRUFOLD" {
             let panel_rect = Rect::from_min_max(pos2(ribbon_left, r.top() + TAB_ROW_HEIGHT), pos2(r.right(), r.bottom()));
-            solidcraft_cms::ui::render_cms_ribbon(ui, panel_rect);
+            let active_sketch_id = app.session.active_sketch.or_else(|| {
+                app.session.doc.features.iter().find_map(|f| {
+                    if matches!(f.kind, solidcraft_engine::doc::FeatureKind::Sketch { .. }) {
+                        Some(f.id)
+                    } else {
+                        None
+                    }
+                })
+            });
+            let in_sketch = app.session.active_sketch.is_some();
+            let selected_curves: Vec<String> = app.session.selection.iter().filter_map(|s| {
+                if let solidcraft_engine::Sel::SketchCurve { id, .. } = s {
+                    Some(id.clone())
+                } else {
+                    None
+                }
+            }).collect();
+            let mut sketch_curves = Vec::new();
+            if let Some(sid) = active_sketch_id {
+                if let Some(solved) = app.session.world_state().sketch(sid) {
+                    for c in &solved.sketch.curves {
+                        if let Some((a, b)) = c.kind.ends() {
+                            if a < solved.sketch.points.len() && b < solved.sketch.points.len() {
+                                let p0 = solved.sketch.points[a].pos;
+                                let p1 = solved.sketch.points[b].pos;
+                                sketch_curves.push(solidcraft_cms::ui::CmsSketchCurveInfo {
+                                    id: c.id.clone(),
+                                    start: (p0.x, p0.y),
+                                    end: (p1.x, p1.y),
+                                    is_construction: c.construction,
+                                    is_selected: selected_curves.contains(&c.id),
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+
+            let existing_extrude = app.session.doc.features.iter().find(|f| {
+                matches!(f.kind, solidcraft_engine::doc::FeatureKind::Extrude { .. })
+            });
+            let existing_extrude_id = existing_extrude.map(|f| f.id);
+            let extrude_thickness = existing_extrude.and_then(|f| {
+                if let solidcraft_engine::doc::FeatureKind::Extrude { ref extent, .. } = f.kind {
+                    app.session.doc.eval(&extent.distance, solidcraft_engine::doc::expr::Kind::Length).ok().map(|d| d.abs())
+                        .or_else(|| extent.distance.trim().trim_end_matches("mm").trim().parse::<f64>().ok())
+                } else {
+                    None
+                }
+            });
+
+            let mut dispatch_fn = |action: solidcraft_cms::ui::CmsAppAction| -> Result<serde_json::Value, String> {
+                match action {
+                    solidcraft_cms::ui::CmsAppAction::Run(cmd, params) => app.run(&cmd, params),
+                    solidcraft_cms::ui::CmsAppAction::Start(cmd) => {
+                        app.start(&cmd);
+                        Ok(serde_json::Value::Null)
+                    }
+                    solidcraft_cms::ui::CmsAppAction::EditFeature(id) => {
+                        app.edit_feature(id);
+                        Ok(serde_json::Value::Null)
+                    }
+                }
+            };
+            let mut bridge = solidcraft_cms::ui::CmsAppBridge {
+                in_sketch,
+                active_sketch_id,
+                selected_curves,
+                sketch_curves,
+                existing_extrude_id,
+                extrude_thickness,
+                dispatch: &mut dispatch_fn,
+            };
+            solidcraft_cms::ui::render_cms_ribbon(ui, panel_rect, Some(&mut bridge));
             return;
         }
         // The command whose tool or dialog is open right now, shown pressed in the toolbar.

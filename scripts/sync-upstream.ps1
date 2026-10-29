@@ -25,6 +25,9 @@ git checkout -B $syncBranch
 Write-Host "Merging $TargetTag into $syncBranch..."
 git merge $TargetTag --no-edit
 
+Write-Host "Re-applying CADense Full Branding Suite..." -ForegroundColor Yellow
+& "$PSScriptRoot/apply-branding.ps1"
+
 Write-Host "Running Rule R1 Additive Check..."
 & "$PSScriptRoot/check-additive.ps1" -UpstreamRef $TargetTag
 

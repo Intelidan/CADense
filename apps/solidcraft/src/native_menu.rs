@@ -19,8 +19,8 @@ pub struct NativeMenu {
 
 impl NativeMenu {
     pub fn new(app: &SolveApp, ctx: &egui::Context) -> muda::Result<Self> {
-        let menu = Menu::new();
-        let application = Submenu::new("SolidCraft", true);
+        // === [CADENSE-HOOK: CADense Native Menu Rebranding] ===
+        let application = Submenu::new("CADense", true);
         let file = Submenu::new(app.tr("ui.file"), true);
         let edit = Submenu::new(app.tr_label("Edit"), true);
         let recent = Submenu::new(app.tr("ui.open_recent"), true);
@@ -34,9 +34,10 @@ impl NativeMenu {
             actions.push((item, action));
             Ok(())
         };
+        // === [CADENSE-HOOK: CADense Native Menu About] ===
         application.append(&PredefinedMenuItem::about(
-            Some("About SolidCraft"),
-            Some(AboutMetadata { name: Some("SolidCraft".into()), version: Some(env!("CARGO_PKG_VERSION").into()), ..Default::default() }),
+            Some("About CADense"),
+            Some(AboutMetadata { name: Some("CADense".into()), version: Some(env!("CARGO_PKG_VERSION").into()), ..Default::default() }),
         ))?;
         application.append(&PredefinedMenuItem::separator())?;
         add(
