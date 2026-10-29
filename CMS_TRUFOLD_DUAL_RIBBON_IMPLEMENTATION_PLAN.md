@@ -201,7 +201,8 @@ graph TD
 2. **Step 2**: Implement `trace.rs` (DXF loop assembly and shoelace area calculation).
 3. **Step 3**: Implement `topology.rs` (Shape classifier and port mapping).
 4. **Step 4**: Implement `eval.rs` (2D sketch morphing, slot migration, and relaxed B-Rep fold).
-5. **Step 5**: Inject minimal hooks into `crates/ui-egui/src/workspace.rs`, `toolbar.rs`, `viewport.rs`, and `crates/doc/src/eval.rs`.
+5. **Step 5**: Inject minimal hooks into `crates/ui-egui/src/workspace.rs`, `toolbar.rs`, and `viewport.rs`.
 6. **Step 6**: Implement `ui.rs` (Ribbon 1 & Ribbon 2 rendering).
 7. **Step 7**: Implement `export.rs` & `batch.rs`.
 8. **Step 8**: Run `cargo test -p solidcraft_cms` and `cargo run -p solidcraft` to verify live in the SolidCraft app.
+9. **Step 9 (Upstream Base Sync)**: Successfully upgraded base SolidCraft to **`v0.26.1` (Format 43)**. Preserved all `[CADENSE-HOOK]` registrations in `ui-egui` and `Cargo.toml`. Verified all 21 CMS truFold unit tests passing 100% and verified Rule R1 Additive compliance.

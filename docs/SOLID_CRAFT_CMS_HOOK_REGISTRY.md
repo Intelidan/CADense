@@ -1,7 +1,11 @@
 # SolidCraft CMS Hook Registry
-## Upstream Zero-Touch Compliance & Minimal Injection Log
+## Upstream Zero-Touch Compliance & Minimal Injection Log (Validated on SolidCraft v0.26.1, Format 43)
 
 This document records every line of code injected into upstream `tangency-labs/solidcraft` native files to support **CMS truFold**. Following the agreed **99% Isolated Sub-Crate / 1% Hook Injection** strategy, 99% of domain logic, math, Flutter-derived scalers, and UI components live isolated in `crates/solidcraft_cms/`, while native SolidCraft files only receive minimal delegation hooks.
+
+**Upstream Release Sync Status**:
+- `v0.25.1` (Format 41): Initial integration
+- `v0.26.1` (Format 43): Cleanly merged, zero upstream regressions, Rule R1 additive check passing 100%.
 
 ---
 
@@ -12,7 +16,11 @@ This document records every line of code injected into upstream `tangency-labs/s
 ---
 
 ### 2. `crates/ui-egui/Cargo.toml`
-- **Line Injected**: `solidcraft-cms = { workspace = true }` under `[dependencies]`.
+- **Line Injected**:
+  ```toml
+  # === [CADENSE-HOOK: CMS truFold sub-crate dependency] ===
+  solidcraft-cms = { workspace = true }
+  ```
 - **Purpose**: Allows `ui-egui` to link to `solidcraft_cms::ui` for rendering delegation.
 
 ---
